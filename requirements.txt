@@ -1,11 +1,4 @@
-# Create requirements file
-
 fastapi==0.104.1
 uvicorn==0.24.0
 pydantic==2.4.2
-EOF
-
-# Install everything
-pip install -r requirements.txt
-
-# This will take 1-2 minutes
+python-multipart==0.0.6
