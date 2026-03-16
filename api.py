@@ -1,16 +1,23 @@
-# api.py - Make sure this is running
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Optional, List
 import uvicorn
-from agent import FileOrganizerAgent
 import os
+from agent import FileOrganizerAgent
 
 app = FastAPI(title="AI File Organizer Agent")
 agent = FileOrganizerAgent()
 
+# Pydantic v1 model
 class OrganizeRequest(BaseModel):
     files: Optional[List[str]] = None
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "files": ["file1.pdf", "image.jpg"]
+            }
+        }
 
 @app.get("/")
 async def root():
@@ -29,7 +36,6 @@ async def organize_files(request: OrganizeRequest = None):
     print("\n📢 API received organize request!")
     files = request.files if request else None
     results = agent.organize(files)
-    print(f"✅ Organized {len(results)} files")
     return {
         "success": True,
         "results": results,
@@ -54,17 +60,20 @@ async def learn(extension: str, folder: str):
 @app.get("/files")
 async def list_files():
     """List all files in workspace with their locations"""
-    files = []
-    workspace = Path("agent_workspace")
+    from pathlib import Path
     
-    for item in workspace.rglob("*"):
-        if item.is_file() and item.name != "memory.json":
-            files.append({
-                "name": item.name,
-                "path": str(item),
-                "folder": item.parent.name,
-                "size": item.stat().st_size
-            })
+    workspace = Path("agent_workspace")
+    files = []
+    
+    if workspace.exists():
+        for item in workspace.rglob("*"):
+            if item.is_file() and item.name != "memory.json":
+                files.append({
+                    "name": item.name,
+                    "path": str(item),
+                    "folder": item.parent.name,
+                    "size": item.stat().st_size
+                })
     return files
 
 if __name__ == "__main__":
@@ -77,4 +86,5 @@ if __name__ == "__main__":
     print("\nPress Ctrl+C to stop")
     print("="*50 + "\n")
     
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
