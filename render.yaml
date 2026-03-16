@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: file-organizer-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    plan: free
+    region: oregon
+    pythonVersion: 3.11.9  # Explicit Python version!
